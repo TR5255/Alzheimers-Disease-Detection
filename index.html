@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alzheimer’s Disease Detection</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Title Bar */
+        .navbar {
+            background: #007bff;
+            color: white;
+            padding: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Main Container */
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            margin-top: 50px;
+            width: 50%;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        /* File Upload */
+        .file-input {
+            display: none;
+        }
+
+        .upload-label {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+
+        .upload-label:hover {
+            background-color: #0056b3;
+        }
+
+        /* Image Preview */
+        .preview-container {
+            margin-top: 20px;
+            display: none;
+            text-align: center;
+        }
+
+        .preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 5px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        /* Predict Button */
+        .predict-btn {
+            margin-top: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-size: 16px;
+        }
+
+        .predict-btn:hover {
+            background-color: #218838;
+        }
+
+        /* Prediction Result */
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                width: 80%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Title Bar -->
+    <div class="navbar">Alzheimer’s Disease Detection</div>
+
+    <div class="container">
+        <h2>Upload an MRI Scan for Prediction</h2>
+        
+        <!-- File Upload -->
+        <input type="file" id="imageInput" class="file-input" accept="image/*" onchange="previewImage()">
+        <label for="imageInput" class="upload-label">Choose Image</label>
+
+        <!-- Image Preview -->
+        <div class="preview-container" id="previewContainer">
+            <h3>Selected Image</h3>
+            <img id="preview" class="preview">
+        </div>
+
+        <!-- Predict Button -->
+        <button class="predict-btn" onclick="uploadImage()">Predict</button>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        function previewImage() {
+            let input = document.getElementById("imageInput");
+            let preview = document.getElementById("preview");
+            let previewContainer = document.getElementById("previewContainer");
+
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewContainer.style.display = "block";
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function uploadImage() {
+            let input = document.getElementById("imageInput").files[0];
+            if (!input) {
+                alert("Please select an image!");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("file", input);
+
+            fetch("/predict", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                let predictionText = "";
+
+                switch (data.predicted_class) {
+                    case 0:
+                        predictionText = "Alzheimer’s Disease";
+                        break;
+                    case 1:
+                        predictionText = "Cognitively Impaired";
+                        break;
+                    case 2:
+                        predictionText = "Common Normal";
+                        break;
+                    default:
+                        predictionText = "Unknown Prediction";
+                }
+
+                document.getElementById("result").innerText = "Predicted Class: " + predictionText;
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+
+</body>
+</html>
